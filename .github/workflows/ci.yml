@@ -18,6 +18,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv python install ${{ matrix.python-version }}
-      - run: uv sync --group dev --python ${{ matrix.python-version }}
+      - run: uv sync --python ${{ matrix.python-version }}
       - run: uv run --python ${{ matrix.python-version }} pre-commit run --all-files
       - run: uv run --python ${{ matrix.python-version }} pytest
+      - run: uv run --python ${{ matrix.python-version }} mkdocs build --strict

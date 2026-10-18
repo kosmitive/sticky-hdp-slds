@@ -290,6 +290,14 @@ def test_blocked_sweep_is_finite_and_sticky() -> None:
     assert float(np.asarray(state.rho)) > 0.0
 
 
+def test_smoke_run_finishes() -> None:
+    from examples.smoke import run_smoke
+
+    result = run_smoke()
+    assert np.all(np.isfinite(result["log_joint"]))
+    assert np.allclose(result["transition"].sum(axis=1), 1.0, atol=1e-6)
+
+
 def _companion_radius(slopes: np.ndarray) -> float:
     daily, week, month = slopes
     coef = np.zeros(22)

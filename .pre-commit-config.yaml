@@ -27,3 +27,9 @@ repos:
         pass_filenames: false
         always_run: true
         types: [python]
+      - id: mkdocs-strict
+        name: mkdocs build --strict
+        entry: uv run mkdocs build --strict
+        language: system
+        pass_filenames: false
+        always_run: true
