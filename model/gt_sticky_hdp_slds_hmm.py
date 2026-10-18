@@ -348,7 +348,7 @@ class StickyHDPSLDSHMMConfiguration:
 
         # sample dynamics and R
         if self.sample_dynamics:
-            if self.it.dyn_prior_type is 'ard':
+            if self.it.dyn_prior_type == 'ard':
                 for k in range(self.rounds_ard):
                     self.it.slds_post_ard_dynamics_param_sampling()
             else:

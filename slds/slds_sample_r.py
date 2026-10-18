@@ -32,8 +32,9 @@ class StickyHDPSLDSHMMModelEmissionMixin:
     def slds_post_sample_r(self):
 
         num_traces, num_steps, _ = self.y.shape
-        dof = num_traces + num_steps + self.emission_prior[0]
-        scale = self.emission_prior[1]
+        # Eq. (34): T is the number of observations, traces times steps.
+        dof = num_traces * num_steps + self.emission_prior[0]
+        scale = np.array(self.emission_prior[1], dtype=np.float64, copy=True)
 
         for d in range(num_traces):
             for t in range(num_steps):

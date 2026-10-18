@@ -220,16 +220,16 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
                 x[t, s] = slds_params[0][cur_z] @ x[t, s - 1] + e[t, s - 1]
                 z[t, s] = cur_z
 
-        # emissions
-        w = np.random.multivariate_normal(np.zeros(self.od), self.R, [num_traces * (num_steps + 1)])
-        y = x.reshape([-1, self.ld]) @ self.C.transpose() + w
+        # emissions. Drop the same initial time index that is dropped from y.
+        w = np.random.multivariate_normal(np.zeros(self.od), self.R, [num_traces, num_steps + 1])
+        y = x.reshape([-1, self.ld]) @ self.C.transpose() + w.reshape([-1, self.od])
         y = y.reshape([num_traces, num_steps + 1, self.od])
 
         self.z = z[:, 1:]
         self.x = x[:, 1:]
         self.e = e
         self.y = y[:, 1:]
-        self.w = w
+        self.w = w[:, 1:]
 
     def init_params(self):
 
@@ -275,7 +275,7 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         A = np.load(join(folder, StickyHDPSLDSHMMModel.fn_A))
         Sigma = np.load(join(folder, StickyHDPSLDSHMMModel.fn_Sigma))
         m.slds_params = [A, Sigma]
-        if data['prior'] is 'ard':
+        if data['prior'] == 'ard':
             m.slds_params.append(np.load(join(folder, StickyHDPSLDSHMMModel.fn_ard_alpha)))
 
         # save rest

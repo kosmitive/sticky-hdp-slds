@@ -61,7 +61,8 @@ class MNIWPrior:
 
         # fill at separately
         for z in range(num):
-            A[z] = matrix_normal.rvs(self.M, Sigma[z], self.K)
+            # MN(M, Sigma, K^{-1}); K is the column precision (Eq. 21).
+            A[z] = matrix_normal.rvs(self.M, Sigma[z], np.linalg.inv(self.K))
 
         # pass back the sample
         return [A, Sigma]
