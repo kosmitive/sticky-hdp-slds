@@ -24,7 +24,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from misc.ansi_color_codes import ACC
+from sticky_hdp_slds.misc.ansi_color_codes import ACC
 
 
 def gen_plot(timeline, filename, title):

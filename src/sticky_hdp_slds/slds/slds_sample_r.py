@@ -21,38 +21,26 @@
 # SOFTWARE.
 
 
-import numpy as np
+import scipy.special
+from scipy.stats import invwishart
 
-from misc.disc_dist_divergences import regularize_matrix
-
-
-def sv_gamma_pdf(x, shape, rate):
-    norm = rate ** shape / m.gamma(shape)
-    un_norm = x ** (shape - 1) * np.exp(-rate * x)
-    return norm * un_norm
+from sticky_hdp_slds.slds.slds_seq_sample_z import *
 
 
-def sv_gauss_pdf(x, mu, sigma):
+class StickyHDPSLDSHMMModelEmissionMixin:
 
-    n = len(mu)
-    centered_x = x - mu
-    m_dist = -0.5 * np.inner(centered_x, np.linalg.inv(sigma) @ centered_x)
-    norm_c = 1 / ((2 * np.pi) ** (n / 2) * np.linalg.det(sigma) ** 0.5)
-    return norm_c * np.exp(m_dist)
+    def slds_post_sample_r(self):
 
+        num_traces, num_steps, _ = self.y.shape
+        # Eq. (34): T is the number of observations, traces times steps.
+        dof = num_traces * num_steps + self.emission_prior[0]
+        scale = np.array(self.emission_prior[1], dtype=np.float64, copy=True)
 
-def sv_beta_pdf(x, a, b):
-    """Calculate pdf of beta(x|a,b).
+        for d in range(num_traces):
+            for t in range(num_steps):
+                vec = self.y[d, t] - self.C @ self.x[d, t]
+                new_t = np.outer(vec, vec)
+                scale += new_t
 
-    :param x: Vector [D] of all elements.
-    :param a: The shape parameter a
-    :param b: The shape parameter b
-    :return: Vector [D] containing the pdfs.
-    """
-
-    # get norm constant
-    beta_norm = (m.gamma(a) * m.gamma(b)) / m.gamma(a + b)
-
-    # calc un-normalized and return normalized
-    un_norm = x ** (a - 1) * (1 - x) ** (b - 1)
-    return un_norm / beta_norm
+        # now sample r
+        self.R = invwishart.rvs(dof, scale)

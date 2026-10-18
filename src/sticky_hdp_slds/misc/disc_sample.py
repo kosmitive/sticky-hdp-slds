@@ -23,7 +23,7 @@
 
 import numpy as np
 
-from misc.disc_dist_divergences import symm_kl_divergence, kl_divergence
+from sticky_hdp_slds.misc.disc_dist_divergences import symm_kl_divergence, kl_divergence
 
 
 def sample_cat(measure, shape=None, use_logits=False):

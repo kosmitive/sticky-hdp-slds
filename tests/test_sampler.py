@@ -11,11 +11,11 @@ import tempfile
 import numpy as np
 from scipy import stats
 
-from model.ard_prior import ARDPrior
-from model.gt_sticky_hdp_slds_hmm import StickyHDPSLDSHMMConfiguration
-from model.mniw_prior import MNIWPrior
-from model.sticky_hdp_prior import StickyHDPPrior
-from model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
+from sticky_hdp_slds.model.ard_prior import ARDPrior
+from sticky_hdp_slds.model.gt_sticky_hdp_slds_hmm import StickyHDPSLDSHMMConfiguration
+from sticky_hdp_slds.model.mniw_prior import MNIWPrior
+from sticky_hdp_slds.model.sticky_hdp_prior import StickyHDPPrior
+from sticky_hdp_slds.model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
 
 
 def _model(
@@ -100,9 +100,9 @@ def test_empty_rows_are_skipped_when_sampling_alpha_kappa(monkeypatch) -> None:
         calls["beta"] += 1
         return 0.5
 
-    monkeypatch.setattr("slds.slds_sample_sticky_hdp_params.beta.rvs", _beta)
+    monkeypatch.setattr("sticky_hdp_slds.slds.slds_sample_sticky_hdp_params.beta.rvs", _beta)
     monkeypatch.setattr(
-        "slds.slds_sample_sticky_hdp_params.bernoulli.rvs",
+        "sticky_hdp_slds.slds.slds_sample_sticky_hdp_params.bernoulli.rvs",
         lambda p: 0,
     )
     model = _model()
@@ -133,7 +133,7 @@ def test_emission_degrees_of_freedom_count_observations(monkeypatch) -> None:
         captured["scale"] = np.array(scale, copy=True)
         return np.eye(2)
 
-    monkeypatch.setattr("slds.slds_sample_r.invwishart.rvs", _rvs)
+    monkeypatch.setattr("sticky_hdp_slds.slds.slds_sample_r.invwishart.rvs", _rvs)
     model = _model()
     model.y = np.zeros((3, 5, 2))
     model.x = np.zeros((3, 5, 2))
@@ -152,9 +152,9 @@ def test_regression_counts_ignore_the_initial_state(monkeypatch) -> None:
         captured.append(df)
         return np.eye(2)
 
-    monkeypatch.setattr("slds.slds_mniw_prior_sample.invwishart.rvs", _rvs)
+    monkeypatch.setattr("sticky_hdp_slds.slds.slds_mniw_prior_sample.invwishart.rvs", _rvs)
     monkeypatch.setattr(
-        "slds.slds_mniw_prior_sample.matrix_normal.rvs",
+        "sticky_hdp_slds.slds.slds_mniw_prior_sample.matrix_normal.rvs",
         lambda *args, **kwargs: np.eye(2),
     )
     model = _model(n0=6)
@@ -226,7 +226,7 @@ def test_ard_posterior_keeps_column_orientation(monkeypatch) -> None:
         return np.array(mean, copy=True)
 
     monkeypatch.setattr(
-        "slds.slds_ard_prior_sample.np.random.multivariate_normal",
+        "sticky_hdp_slds.slds.slds_ard_prior_sample.np.random.multivariate_normal",
         _return_mean,
     )
     rng = np.random.default_rng(1)
@@ -260,7 +260,7 @@ def test_ard_alpha_posterior_uses_half_the_sum_of_squares(monkeypatch) -> None:
         captured["scale"] = np.array(scale, copy=True)
         return np.ones_like(scale)
 
-    monkeypatch.setattr("slds.slds_ard_prior_sample.np.random.gamma", _gamma)
+    monkeypatch.setattr("sticky_hdp_slds.slds.slds_ard_prior_sample.np.random.gamma", _gamma)
     model = _model(max_z=1, alpha0=(4.0, 2.0))
     matrix = np.array([[3.0, 0.0], [0.0, 4.0]])
     model.slds_params = [np.array([matrix]), np.array([np.eye(2)]), np.ones((1, 2))]

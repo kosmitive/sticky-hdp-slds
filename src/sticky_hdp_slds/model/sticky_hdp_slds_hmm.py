@@ -25,21 +25,21 @@ from os.path import join
 import numpy as np
 from scipy.stats import invwishart, multivariate_normal
 
-from misc.disc_sample import sample_cat
-from misc.hdd_save_load import save_json, load_json
-from model.ard_prior import ARDPrior
-from model.mniw_prior import MNIWPrior
-from model.sticky_hdp_prior import StickyHDPPrior
-from slds.slds_ard_prior_sample import StickyHDPSLDSHMMModelARDMixin
+from sticky_hdp_slds.misc.disc_sample import sample_cat
+from sticky_hdp_slds.misc.hdd_save_load import save_json, load_json
+from sticky_hdp_slds.model.ard_prior import ARDPrior
+from sticky_hdp_slds.model.mniw_prior import MNIWPrior
+from sticky_hdp_slds.model.sticky_hdp_prior import StickyHDPPrior
+from sticky_hdp_slds.slds.slds_ard_prior_sample import StickyHDPSLDSHMMModelARDMixin
 
-from slds.slds_block_sample_x import StickyHDPSLDSHMMModelBlockXMixin
-from slds.slds_block_sample_z import StickyHDPSLDSHMMModelBlockZMixin
-from slds.slds_init import StickyHDPSLDSHMMModelInitMixin
-from slds.slds_kalman_filter_y import StickyHDPSLDSHMMModelKalmanYMixin
-from slds.slds_mniw_prior_sample import StickyHDPSLDSHMMModelMNIWMixin
-from slds.slds_sample_r import StickyHDPSLDSHMMModelEmissionMixin
-from slds.slds_sample_sticky_hdp_params import StickyHDPSLDSHMMModelHDPMixin
-from slds.slds_seq_sample_z import StickyHDPSLDSHMMModelSeqZMixin
+from sticky_hdp_slds.slds.slds_block_sample_x import StickyHDPSLDSHMMModelBlockXMixin
+from sticky_hdp_slds.slds.slds_block_sample_z import StickyHDPSLDSHMMModelBlockZMixin
+from sticky_hdp_slds.slds.slds_init import StickyHDPSLDSHMMModelInitMixin
+from sticky_hdp_slds.slds.slds_kalman_filter_y import StickyHDPSLDSHMMModelKalmanYMixin
+from sticky_hdp_slds.slds.slds_mniw_prior_sample import StickyHDPSLDSHMMModelMNIWMixin
+from sticky_hdp_slds.slds.slds_sample_r import StickyHDPSLDSHMMModelEmissionMixin
+from sticky_hdp_slds.slds.slds_sample_sticky_hdp_params import StickyHDPSLDSHMMModelHDPMixin
+from sticky_hdp_slds.slds.slds_seq_sample_z import StickyHDPSLDSHMMModelSeqZMixin
 
 
 class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMModelBlockZMixin,

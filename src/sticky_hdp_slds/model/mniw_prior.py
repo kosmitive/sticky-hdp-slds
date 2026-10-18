@@ -23,21 +23,30 @@
 
 from os.path import join
 
-from misc.hdd_save_load import save_json, load_json
+from sticky_hdp_slds.misc.hdd_save_load import save_json, load_json
 import numpy as np
-from scipy.stats import gamma, invwishart, multivariate_normal
+from scipy.stats import invwishart, matrix_normal
 
 
-class ARDPrior:
+class MNIWPrior:
 
-    # define function names
-    fn = 'ard_prior.json'
+    fn = 'mniw_prior.json'
+    fn_M = 'M.npy'
+    fn_K = 'K.npy'
     fn_S0 = 'S0.npy'
 
-    def __init__(self, alpha0, n0, S0):
+    def __init__(self, M, K, n0, S0):
+        """This initializes a new mniw prior, which can be e.g. used to set a prior
+        on a transformation and noise covariance.
 
-        # save params
-        self.alpha0 = alpha0
+        :param M: The mean of the matrix normal.
+        :param K: The column variance
+        :param n0: The dof of the inverse wishart.
+        :param S0: The scale of the inverse wishart.
+        """
+
+        self.M = M
+        self.K = K
         self.n0 = n0
         self.S0 = S0
 
@@ -46,42 +55,35 @@ class ARDPrior:
         # first of all sample the covariance
         Sigma = invwishart.rvs(self.n0, self.S0, num)
 
-        # perform a simple forward sample
+        # get dims and reserve space
         nd = self.S0.shape[0]
-        # gamma.rvs(a, loc, scale). The rate is the scale, not the location.
-        alpha = gamma.rvs(self.alpha0[0], scale=1.0 / self.alpha0[1], size=(num, nd))
+        A = np.empty([num, nd, nd])
 
-        # use the generated alpha to generate the modes
-        cov = np.diag(1 / alpha.repeat(nd))
-        A = multivariate_normal.rvs(np.zeros(num * nd ** 2), cov)
-
-        # bring in correct form
-        A = A.reshape([num, nd, nd]).transpose([0, 2, 1])
+        # fill at separately
+        for z in range(num):
+            # MN(M, Sigma, K^{-1}); K is the column precision (Eq. 21).
+            A[z] = matrix_normal.rvs(self.M, Sigma[z], np.linalg.inv(self.K))
 
         # pass back the sample
-        return A, Sigma, alpha
+        return [A, Sigma]
 
     @staticmethod
     def load(folder):
         """Load the prior from the specified folder."""
 
-        d = load_json(folder, ARDPrior.fn)
-        alpha_shape = d['alpha_shape']
-        alpha_rate = d['alpha_rate']
+        d = load_json(folder, MNIWPrior.fn)
         n0 = d['n0']
-        S0 = np.load(join(folder, ARDPrior.fn_S0))
-
-        return ARDPrior([alpha_shape, alpha_rate], n0, S0)
+        M = np.load(join(folder, MNIWPrior.fn_M))
+        K = np.load(join(folder, MNIWPrior.fn_K))
+        S0 = np.load(join(folder, MNIWPrior.fn_S0))
+        return MNIWPrior(M, K, n0, S0)
 
     def store(self, folder):
         """Store the prior in the specified folder."""
 
         # store the dict
-        sdict = {
-            'n0': self.n0,
-            'alpha_rate': self.alpha0[1],
-            'alpha_shape': self.alpha0[0],
-        }
-
-        save_json(folder, ARDPrior.fn, sdict)
-        np.save(join(folder, ARDPrior.fn_S0), self.S0)
+        sdict = { 'n0': self.n0 }
+        save_json(folder, MNIWPrior.fn, sdict)
+        np.save(join(folder, MNIWPrior.fn_M), self.M)
+        np.save(join(folder, MNIWPrior.fn_K), self.K)
+        np.save(join(folder, MNIWPrior.fn_S0), self.S0)

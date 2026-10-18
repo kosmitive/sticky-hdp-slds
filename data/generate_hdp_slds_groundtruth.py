@@ -26,12 +26,12 @@ import shutil
 
 from os.path import join
 
-from model.ard_prior import ARDPrior
-from model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
-from model.mniw_prior import MNIWPrior
-from misc.output import print_line
-from misc.plotting import plot_discrete_distribution, plot_trajectories
-from model.sticky_hdp_prior import StickyHDPPrior
+from sticky_hdp_slds.model.ard_prior import ARDPrior
+from sticky_hdp_slds.model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
+from sticky_hdp_slds.model.mniw_prior import MNIWPrior
+from sticky_hdp_slds.misc.output import print_line
+from sticky_hdp_slds.misc.plotting import plot_discrete_distribution, plot_trajectories
+from sticky_hdp_slds.model.sticky_hdp_prior import StickyHDPPrior
 
 
 def generate_hdp_slds_groundtrouth(folder, num_traces, num_steps, model):

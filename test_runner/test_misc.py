@@ -23,8 +23,8 @@
 
 import numpy as np
 
-from misc.disc_dist_divergences import minimum_hamming_distance
-from misc.disc_sample import sample_cat
+from sticky_hdp_slds.misc.disc_dist_divergences import minimum_hamming_distance
+from sticky_hdp_slds.misc.disc_sample import sample_cat
 
 
 def test_hamming_dist():

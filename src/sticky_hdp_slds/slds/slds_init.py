@@ -22,7 +22,7 @@
 
 
 import numpy as np
-from misc.disc_sample import sample_cat
+from sticky_hdp_slds.misc.disc_sample import sample_cat
 
 
 class StickyHDPSLDSHMMModelInitMixin:

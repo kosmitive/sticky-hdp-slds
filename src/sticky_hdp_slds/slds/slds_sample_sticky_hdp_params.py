@@ -23,7 +23,7 @@
 
 import numpy as np
 
-from misc.disc_sequences import count_state_transitions
+from sticky_hdp_slds.misc.disc_sequences import count_state_transitions
 from scipy.stats import bernoulli, beta
 
 

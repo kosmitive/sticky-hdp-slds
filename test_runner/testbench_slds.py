@@ -26,9 +26,9 @@ from os.path import join
 
 from debug.log import create_logtoken
 # sampling imports
-from misc.history import History
-from misc.output import print_line, gen_plot, print_dbl_line
-from model.gt_sticky_hdp_slds_hmm import StickyHDPSLDSHMMConfiguration
+from sticky_hdp_slds.misc.history import History
+from sticky_hdp_slds.misc.output import print_line, gen_plot, print_dbl_line
+from sticky_hdp_slds.model.gt_sticky_hdp_slds_hmm import StickyHDPSLDSHMMConfiguration
 
 
 def exec_test(l_token, test_conf):

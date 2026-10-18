@@ -26,11 +26,11 @@ from os.path import join
 import numpy as np
 
 from data.generate_hdp_slds_groundtruth import generate_hdp_slds_groundtrouth
-from misc.output import print_line
-from model.ard_prior import ARDPrior
-from model.mniw_prior import MNIWPrior
-from model.sticky_hdp_prior import StickyHDPPrior
-from model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
+from sticky_hdp_slds.misc.output import print_line
+from sticky_hdp_slds.model.ard_prior import ARDPrior
+from sticky_hdp_slds.model.mniw_prior import MNIWPrior
+from sticky_hdp_slds.model.sticky_hdp_prior import StickyHDPPrior
+from sticky_hdp_slds.model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
 
 
 def generate_mniw_data(root='./data_packs', name='hdp_slds_mniw'):

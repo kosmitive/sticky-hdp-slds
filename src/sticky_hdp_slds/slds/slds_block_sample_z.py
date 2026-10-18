@@ -24,7 +24,7 @@
 import numpy as np
 import scipy.stats as sp
 
-from misc.disc_sample import sample_cat
+from sticky_hdp_slds.misc.disc_sample import sample_cat
 
 
 class StickyHDPSLDSHMMModelBlockZMixin:

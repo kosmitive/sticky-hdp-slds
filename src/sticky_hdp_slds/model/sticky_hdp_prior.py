@@ -21,10 +21,10 @@
 # SOFTWARE.
 
 
-from misc.hdd_save_load import save_json, load_json
+from sticky_hdp_slds.misc.hdd_save_load import save_json, load_json
 import numpy as np
 
-from misc.stick_breaking import stick_breaking_construction_sticky_hdp
+from sticky_hdp_slds.misc.stick_breaking import stick_breaking_construction_sticky_hdp
 
 
 class StickyHDPPrior:

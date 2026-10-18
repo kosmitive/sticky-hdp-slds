@@ -24,7 +24,7 @@
 import numpy as np
 import os
 import time
-from misc.output import print_mat_statistics
+from sticky_hdp_slds.misc.output import print_mat_statistics
 
 
 class TestLogger:

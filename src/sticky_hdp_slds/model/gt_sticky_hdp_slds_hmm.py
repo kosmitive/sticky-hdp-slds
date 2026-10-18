@@ -26,11 +26,11 @@ import os
 import numpy as np
 from os.path import join
 
-from misc.ansi_color_codes import ACC
-from misc.disc_dist_divergences import minimum_hamming_distance, kl_divergence
-from misc.history import History
-from misc.output import print_line, print_array, print_trace, gen_plot
-from model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
+from sticky_hdp_slds.misc.ansi_color_codes import ACC
+from sticky_hdp_slds.misc.disc_dist_divergences import minimum_hamming_distance, kl_divergence
+from sticky_hdp_slds.misc.history import History
+from sticky_hdp_slds.misc.output import print_line, print_array, print_trace, gen_plot
+from sticky_hdp_slds.model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
 
 
 class StickyHDPSLDSHMMConfiguration:

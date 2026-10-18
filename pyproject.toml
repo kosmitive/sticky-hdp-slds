@@ -1,0 +1,31 @@
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14"]
+build-backend = "uv_build"
+
+[project]
+name = "sticky-hdp-slds"
+version = "0.1.0"
+description = "Sticky hierarchical Dirichlet process switching linear dynamical system (Fox et al., arXiv:1003.3829)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Markus Semmler" }]
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.7",
+    "matplotlib>=3.5",
+]
+keywords = ["bayesian-nonparametrics", "slds", "hidden-markov-model", "time-series"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
