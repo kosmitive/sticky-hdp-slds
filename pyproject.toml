@@ -20,10 +20,12 @@ dependencies = [
 keywords = ["bayesian-nonparametrics", "slds", "hidden-markov-model", "time-series"]
 
 [project.optional-dependencies]
+volatility = ["arch>=5.3"]
 plots = ["matplotlib>=3.5"]
 
 [dependency-groups]
 examples = [
+    "arch>=5.3",
     "matplotlib>=3.5",
 ]
 dev = [

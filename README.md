@@ -12,6 +12,40 @@ Gibbs sampling for a sticky hierarchical Dirichlet process switching linear dyna
 
 The 2.35 rad release is the trace in the figure. Its 90% band covers 69.4% of the horizon and 40% of the last 20-step block. The three smaller releases have horizon coverage 99.4%, 99.4%, and 100%.
 
+## Volatility
+
+![20-day log mean variance, regime forecast and baselines](docs/img/btc_regime_forecast.png)
+
+`examples/bitcoin` scores the log of the mean squared return over the next 1, 5, 20, and 60 days, at every holdout origin. The Bitcoin holdout is the last 365 calendar days. The regime model is a 3-state sticky HAR on daily `log(r^2)`, refit every 21 origins on a trailing 4-year window. Each refit is 4 chains of 2000 sweeps, seed 23, with 160 thinned draws. The scored forecast is a direct regression at each horizon, with a separate intercept and HAR slopes in each regime, weighted by the filtered probabilities after they are moved forward with the transition matrix. A bias correction uses only windows that have already ended. Baselines are HAR(1/5/22), the expanding mean of the target, EWMA 0.94, and GARCH(1,1) Student-t. Each baseline uses only data before the target window. Diebold-Mariano tests use a Newey-West variance with lag `h - 1`. A negative statistic means the regime model has the smaller squared error. The same tests are on the [volatility page](https://kosmitive.github.io/sticky-hdp-slds-hmm/volatility/).
+
+The close file is in `examples/bitcoin/data/`: Yahoo Finance chart API daily closes, interval 1d, downloaded 2026-10-11. The Bitcoin file drops 2026-10-11, the download date. See `examples/bitcoin/data/README.md`.
+
+Eighteen refits, worst R-hat 1.068, 76.1 s. GARCH missed 9 origins. The direct forecast has the lowest RMSE at 20 and 60 days. Direct is this run. Simulated is the previous path forecast and was not re-estimated.
+
+| Lead (days) | Direct | Simulated | HAR | EWMA 0.94 | GARCH-t | Mean |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 2.638 | 2.673 | 2.610 | 3.133 | 3.323 | 2.691 |
+| 5 | 1.021 | 1.109 | 1.022 | 1.121 | 1.274 | 1.162 |
+| 20 | 0.742 | 0.998 | 0.797 | 0.849 | 0.985 | 0.900 |
+| 60 | 0.597 | 0.983 | 0.718 | 0.791 | 1.074 | 0.785 |
+
+| Lead (days) | vs HAR | vs mean | vs EWMA | vs GARCH |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 1.23 (0.217) | -1.43 (0.153) | -6.19 (5.9e-10) | -7.22 (5.3e-13) |
+| 5 | -0.03 (0.978) | -2.47 (0.013) | -2.11 (0.035) | -3.58 (3.5e-4) |
+| 20 | -1.55 (0.121) | -1.97 (0.049) | -1.52 (0.130) | -3.52 (4.3e-4) |
+| 60 | -1.78 (0.075) | -1.46 (0.145) | -1.43 (0.153) | -3.46 (5.3e-4) |
+
+The direct forecast beats the mean at 5 and 20 days and GARCH at every horizon. Every comparison against HAR has a p-value above 0.05. The simulated path was biased high by about 0.63 and 0.81 at 20 and 60 days. The direct forecast's mean errors on those leads are 0.21 and 0.22.
+
+The removed NumPy Gibbs sampler, on the same 4-by-2000 protocol, took 651.1 s. On one 1460-day window it ran at 253.3 sweeps per second; the JAX sampler runs at 1602.8, about 6.33 times that rate, with compilation excluded.
+
+An earlier single-origin sticky HDP-SLDS, scored on overlapping realized volatility, is not in this package. On that score the SLDS won leads 20 and 60.
+
+Documentation: [https://kosmitive.github.io/sticky-hdp-slds-hmm/](https://kosmitive.github.io/sticky-hdp-slds-hmm/).
+
+The sweep used for the pendulum figures is the blocked sampler: latent states, the mode sequence, the sticky HDP, the dynamics, and the emission covariance. `sequential_modes=True` adds the single-site mode update. `ard=True` replaces the matrix-normal dynamics update. The pendulum fit uses neither.
+
 ## Quick start
 
 [uv](https://docs.astral.sh/uv/) installs the locked environment. Python 3.11 or newer is required.
@@ -21,14 +55,15 @@ uv sync
 uv run pytest
 uv run python -m examples.smoke
 uv run python -m examples.pendulum.forecast
+uv run python -m examples.bitcoin
 uv run pre-commit install
 ```
 
-`uv sync` installs `sticky_hdp_slds`, the `dev` group (pytest, ruff, pre-commit, and the `examples` group), and the `docs` group. The `examples` group provides `matplotlib`, which is also the `plots` extra. Another project installs the wheel with uv:
+`uv sync` installs `sticky_hdp_slds`, the `dev` group (pytest, ruff, pre-commit, and the `examples` group), and the `docs` group. The `examples` group provides `arch` and `matplotlib`, which are also the `volatility` and `plots` extras. Another project installs the wheel with uv:
 
 ```bash
 uv add sticky-hdp-slds
-uv add "sticky-hdp-slds[plots]"
+uv add "sticky-hdp-slds[volatility,plots]"
 ```
 
 Serve the site:
@@ -45,9 +80,10 @@ The smoke script builds a two-mode system in two latent dimensions, simulates tw
 
 | Path | Role |
 | --- | --- |
-| `src/sticky_hdp_slds/` | Installable package: JAX Gibbs samplers |
+| `src/sticky_hdp_slds/` | Installable package: Gibbs samplers and the volatility study |
 | `examples/smoke.py` | Short end-to-end run |
 | `examples/pendulum/` | Noisy pendulum fit and 80-step forecast |
+| `examples/bitcoin/` | Rolling-origin sticky regime HAR and the close snapshot |
 | `tests/` | Unit checks and stored-reference regressions |
 | `docs/` | This site's source |
 
@@ -87,7 +123,7 @@ The chain mixes inside a band; it does not freeze. The forecast on the 2.35 rad 
 
 ## Tests
 
-`uv run pytest` runs the checks in `tests/`. The fast tests cover filter normalization, a three-step filter against exact enumeration, a forced backward sample, conjugate Gaussian and inverse-Wishart moments, the ARD normal equations, and the Schur-Cohn test against companion eigenvalues. The slower test compares the pendulum forecast with the stored values in `tests/fixtures/published.json`.
+`uv run pytest` runs the checks in `tests/`. The fast tests cover filter normalization, a three-step filter against exact enumeration, a forced backward sample, conjugate Gaussian and inverse-Wishart moments, the ARD normal equations, and the Schur-Cohn test against companion eigenvalues. The slower tests compare the rolling-origin RMSE, the Bitcoin-window posterior means, and the pendulum forecast with the stored values in `tests/fixtures/published.json`.
 
 ## License
 

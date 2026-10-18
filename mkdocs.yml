@@ -15,6 +15,9 @@ theme:
 
 nav:
   - Results: results.md
+  - Volatility:
+      - Protocol: volatility.md
+      - Bitcoin: bitcoin.md
   - Inference: inference.md
   - Overview: index.md
   - Install and usage: install.md

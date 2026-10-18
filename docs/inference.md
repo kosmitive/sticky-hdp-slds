@@ -10,6 +10,10 @@ The Gibbs likelihood is the daily sticky HAR: shared slopes on lags 1, 5, and 22
 
 The companion-root check is a Schur-Cohn reflection test. Scaling the distributed-lag polynomial by `radius**(k+1)` makes every companion eigenvalue lie inside radius 0.999 exactly when every reflection coefficient has absolute value below one. The stationary distribution is a linear solve.
 
+```bash
+uv run python -m examples.bitcoin
+```
+
 Every refit calls `sample_regime_windows`. The forecast filter is `filter_regime_draws`: the local forward recursion, jitted and mapped across draws. Origins in a refit block are positions in that one filtered series.
 
 ## Sticky HDP-SLDS
@@ -25,4 +29,4 @@ The default sweep is the blocked weak-limit sampler of Fox, Sudderth, Jordan, an
 
 ## Speed
 
-The blocked sampler is the JAX implementation. The timing comparison against the removed NumPy sampler is reported with the volatility example.
+On this machine (4 cores, Intel Xeon at 2400 MHz, float64) the removed NumPy Gibbs sampler was slower by about 6.33× on four chains of the 1460-day Bitcoin window: 1602.8 against 253.3 sweeps per second, 4.99 s against 31.58 s, with compilation excluded. The rolling-origin run is 76.1 s against 651.1 s on Bitcoin.

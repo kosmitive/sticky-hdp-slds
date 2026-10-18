@@ -24,6 +24,7 @@ from sticky_hdp_slds.inference import (
     sample_slds,
     slds_sweep,
 )
+from sticky_hdp_slds.volatility import evaluate_returns, load_closes
 
 __all__ = [
     "RegimeData",
@@ -34,9 +35,11 @@ __all__ = [
     "SLDSPrior",
     "SLDSState",
     "backward_sample",
+    "evaluate_returns",
     "filter_regime_draws",
     "fit_regime_har",
     "forward_filter",
+    "load_closes",
     "sample_regime_har",
     "sample_regime_windows",
     "sample_slds",

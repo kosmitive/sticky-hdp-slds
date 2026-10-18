@@ -8,7 +8,7 @@ uv run pytest
 uv run python -m examples.smoke
 ```
 
-`uv sync` installs the package, the `dev` group (pytest, ruff, pre-commit, and the `examples` group), and the `docs` group. The `examples` group provides `matplotlib`, the same library as the `plots` extra.
+`uv sync` installs the package, the `dev` group (pytest, ruff, pre-commit, and the `examples` group), and the `docs` group. The `examples` group provides `arch` and `matplotlib`, the same libraries as the `volatility` and `plots` extras.
 
 ```bash
 uv sync
@@ -20,7 +20,7 @@ A wheel install from another project uses the same extras:
 
 ```bash
 uv add sticky-hdp-slds
-uv add "sticky-hdp-slds[plots]"
+uv add "sticky-hdp-slds[volatility,plots]"
 ```
 
 The smoke script builds a two-mode system in two latent dimensions, simulates two sequences of length 12, and runs three blocked Gibbs sweeps. A successful run prints a finite log joint, matching latent and observation shapes, transition rows that sum to one, and a self-transition weight `rho` in `(0, 1)`.
@@ -30,9 +30,10 @@ The smoke script builds a two-mode system in two latent dimensions, simulates tw
 ```bash
 uv run python -m examples.pendulum.demo
 uv run python -m examples.pendulum.forecast
+uv run python -m examples.bitcoin
 ```
 
-`examples.pendulum.demo` and `examples.pendulum.forecast` accept a sweep count as their only argument. The default is 300. The forecast fits the training window only.
+`examples.pendulum.demo` and `examples.pendulum.forecast` accept a sweep count as their only argument. The default is 300. The forecast fits the training window only. `examples.bitcoin` accepts an optional sweep count. The default is 4 chains of 2000 sweeps.
 
 ## Layout
 
@@ -41,5 +42,6 @@ uv run python -m examples.pendulum.forecast
 | `src/sticky_hdp_slds/` | Installable package: Gibbs samplers and the volatility study |
 | `examples/smoke.py` | Short end-to-end run |
 | `examples/pendulum/` | Noisy pendulum fit and 80-step forecast |
+| `examples/bitcoin/` | Rolling-origin study and the Bitcoin close snapshot |
 | `tests/` | Unit checks and stored-reference regressions |
 | `docs/` | This site's source |
