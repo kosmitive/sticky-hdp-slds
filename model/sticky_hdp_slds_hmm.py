@@ -116,34 +116,16 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
 
         """Calculates log likelihood of the latent transitions."""
 
-        # obtain transition matrices
-        rsh_z = self.z[:, 1:].reshape(-1)
-        latent_transition_ll = 0
-
-        # calculate the term of the latent states
-        num_modes, _ = self.hdp_params[4].shape
-        num_traces, num_steps, latent_dim = self.x.shape
-        comb_traces = self.x.reshape([num_traces * num_steps, -1])
-
-        # iterate over all possible mode assignments
-        for k in range(num_modes):
-            # get indices of elements with k
-            lin_indices = np.squeeze(np.argwhere(rsh_z == k), 1)
-
-            # represents the transition matrix and the covariance
-            tr_mat = self.slds_params[0][k]
-            cov_mat = self.slds_params[1][k]
-
-            # update indices
-            lin_indices += np.floor(lin_indices / num_steps).astype(np.int64) + 1
-
-            # calculate means
-            mean_x = comb_traces[lin_indices - 1] @ tr_mat.transpose()
-
-            # calc emission
-            latent_transition_ll = 0
-            for k in range(len(lin_indices)):
-                latent_transition_ll += multivariate_normal.logpdf(comb_traces[lin_indices[k]], mean_x[k], cov_mat)
+        # x_t | x_{t-1}, z_t for every trace and t >= 1. The previous index
+        # map kept only the last mode and applied A on the wrong side.
+        num_traces, num_steps, _ = self.x.shape
+        latent_transition_ll = 0.0
+        for trace in range(num_traces):
+            for step in range(1, num_steps):
+                mode = int(self.z[trace, step])
+                mean_x = self.slds_params[0][mode] @ self.x[trace, step - 1]
+                latent_transition_ll += multivariate_normal.logpdf(
+                    self.x[trace, step], mean_x, self.slds_params[1][mode])
 
         return latent_transition_ll
 
@@ -157,8 +139,9 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         transition_factors = np.bincount(transitions, minlength=num_modes ** 2)
         transition_count_matrix = transition_factors.reshape([num_modes] * 2)
         smoothed_measure = self.hdp_params[4] + 1e-6
-        smoothed_measure = smoothed_measure / np.expand_dims(np.sum(smoothed_measure, 1), 0)
+        smoothed_measure = smoothed_measure / np.expand_dims(np.sum(smoothed_measure, 1), 1)
         state_transition_ll = np.sum(transition_count_matrix * np.log(smoothed_measure))
+        state_transition_ll += np.sum(np.log(self.hdp_params[3][self.z[:, 0]] + 1e-6))
 
         if np.isnan(state_transition_ll):
             print("Test")
@@ -183,9 +166,10 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
 
         return emission_ll
 
-    def simulate(self, num_traces, num_steps):
+    def simulate(self, num_traces, num_steps, init=True):
         """Uses the prior information an so on, to simulate some traces.
 
+        :param init: When false, keep parameters that have already been assigned.
         :return: collected traces
         """
 
@@ -193,7 +177,8 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         z = np.empty([num_traces, num_steps + 1], dtype=np.int64)
         x = np.empty([num_traces, num_steps + 1, self.ld])
 
-        self.init_params()
+        if init or self.slds_params is None or self.hdp_params[4] is None:
+            self.init_params()
         beta = self.hdp_params[3]
         pi = self.hdp_params[4]
         slds_params = self.slds_params

@@ -85,4 +85,5 @@ def test_sample_cat():
     estmeasure = samples / np.sum(samples)
     print(symm_kl_divergence(nmeasure, estmeasure))
 
-test_sample_cat()
+if __name__ == '__main__':
+    test_sample_cat()
