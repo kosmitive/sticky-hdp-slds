@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -22,7 +22,6 @@
 
 
 import numpy as np
-from sticky_hdp_slds.misc.disc_sample import sample_cat
 
 
 def stick_breaking_construction(gamma, k_max=10000):
@@ -67,10 +66,10 @@ def stick_breaking_construction_dp(alpha, base_measure, num_modes, k_max=10000):
     """
 
     # An array compared with == raises. Only the name 'uniform' is special.
-    if isinstance(base_measure, str) and base_measure == 'uniform':
+    if isinstance(base_measure, str) and base_measure == "uniform":
         base_measure = np.ones(num_modes) / num_modes
     elif isinstance(base_measure, str):
-        raise ValueError("Unknown base measure %r." % (base_measure,))
+        raise ValueError(f"Unknown base measure {base_measure!r}.")
 
     base_measure = np.asarray(base_measure, dtype=np.float64)
     base_measure = base_measure / np.sum(base_measure)
@@ -87,7 +86,9 @@ def stick_breaking_construction_dp(alpha, base_measure, num_modes, k_max=10000):
     return m_beta / np.sum(m_beta)
 
 
-def stick_breaking_construction_sticky_hdp(alpha, kappa, gamma, num_modes, base_measure='uniform', k_max=10000):
+def stick_breaking_construction_sticky_hdp(
+    alpha, kappa, gamma, num_modes, base_measure="uniform", k_max=10000
+):
     """Creates a stick-breaking construction of a sticky hierarchical dirichlet prior. It
     basically uses kappa to add some self-excitement to each state, while alpha and gamma
     control the transition finally chosen. It is chosen as:
@@ -111,7 +112,6 @@ def stick_breaking_construction_sticky_hdp(alpha, kappa, gamma, num_modes, base_
 
     # for all modes sample a distribution with self excitement.
     for m in range(num_modes):
-
         # get specific base measure
         ab = alpha * beta
         ab[m] += kappa

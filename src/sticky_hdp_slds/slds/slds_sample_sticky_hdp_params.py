@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -22,19 +22,15 @@
 
 
 import numpy as np
+from scipy.stats import bernoulli, beta
 
 from sticky_hdp_slds.misc.disc_sequences import count_state_transitions
-from scipy.stats import bernoulli, beta
 
 
 class StickyHDPSLDSHMMModelHDPMixin:
-
     def calc_transitions(self):
 
-        self.transitions = count_state_transitions(
-            self.z,
-            self.hdp_prior.max_z
-        )
+        self.transitions = count_state_transitions(self.z, self.hdp_prior.max_z)
 
     def sample_post_auxiliary_vars(self):
 
@@ -49,7 +45,7 @@ class StickyHDPSLDSHMMModelHDPMixin:
         transitions = self.transitions
 
         trunc_level = np.size(beta)
-        m = np.zeros([trunc_level] * 2)# + 0.0001
+        m = np.zeros([trunc_level] * 2)  # + 0.0001
 
         for j in range(trunc_level):
             for k in range(trunc_level):
@@ -66,7 +62,9 @@ class StickyHDPSLDSHMMModelHDPMixin:
 
         # Overrides are not the emission noise stored on self.w.
         # m_hat removes them from the diagonal (Fox et al., Eq. B.20).
-        override_counts = np.asarray([np.random.binomial(m[j, j], p[j]) for j in range(trunc_level)])
+        override_counts = np.asarray(
+            [np.random.binomial(m[j, j], p[j]) for j in range(trunc_level)]
+        )
         m_hat = m - np.diag(override_counts)
 
         # save auxiliary vars

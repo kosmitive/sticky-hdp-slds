@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -29,8 +29,7 @@ from sticky_hdp_slds.misc.disc_sample import sample_cat
 
 def test_hamming_dist():
 
-    for i in range(100):
-
+    for _i in range(100):
         # create some distribution
         num_modes = 10
         dist = np.random.randint(0, 1000, num_modes)
@@ -59,5 +58,6 @@ def test_hamming_dist():
 
 def test_misc():
     test_hamming_dist()
+
 
 test_misc()

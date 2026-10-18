@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -26,7 +26,6 @@ from scipy.stats import invwishart, matrix_normal
 
 
 class StickyHDPSLDSHMMModelMNIWMixin:
-
     def slds_post_mniw_dynamics_param_sampling(self):
 
         state_dyn_mode = self.slds_params[0]
@@ -47,7 +46,6 @@ class StickyHDPSLDSHMMModelMNIWMixin:
 
         # calc suff stats
         for k in range(max_state):
-
             # sample the new hyper parameters
             s_hh = prob_h[k] @ prob_h[k].transpose() + K
             s_oh = prob_oh[k] @ prob_h[k].transpose() + MK
@@ -82,12 +80,10 @@ class StickyHDPSLDSHMMModelMNIWMixin:
         # iterate over all
         for d in range(num_traces):
             for t in range(1, num_steps):
-
                 k = mode_seq[d, t]
                 i = indices[k]
                 prob_oh[k][:, i] = pseudo_observations[d, t]
-                prob_h[k][:, i] = pseudo_observations[d, t-1]
+                prob_h[k][:, i] = pseudo_observations[d, t - 1]
                 indices[k] += 1
 
         return prob_h, prob_oh, bins
-

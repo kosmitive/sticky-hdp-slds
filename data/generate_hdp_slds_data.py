@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -33,7 +33,7 @@ from sticky_hdp_slds.model.sticky_hdp_prior import StickyHDPPrior
 from sticky_hdp_slds.model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
 
 
-def generate_mniw_data(root='./data_packs', name='hdp_slds_mniw'):
+def generate_mniw_data(root="./data_packs", name="hdp_slds_mniw"):
 
     print_line()
     print_line("Generate HDP-SLDS-HMM using MNIW prior")
@@ -46,7 +46,7 @@ def generate_mniw_data(root='./data_packs', name='hdp_slds_mniw'):
     max_z = 5
 
     # projection
-    C = np.hstack((np.eye(od), np.zeros([od, ld-od])))
+    C = np.hstack((np.eye(od), np.zeros([od, ld - od])))
 
     # setup hdp prior
     alpha_kappa0 = [15.0, 3.0]
@@ -65,7 +65,7 @@ def generate_mniw_data(root='./data_packs', name='hdp_slds_mniw'):
     R0 = 1e-6 * np.eye(od)
 
     # create priors
-    hdp_prior = StickyHDPPrior(max_z, alpha_kappa0, rho0, gamma0, 'uniform')
+    hdp_prior = StickyHDPPrior(max_z, alpha_kappa0, rho0, gamma0, "uniform")
     mniw_prior = MNIWPrior(M, K, n0, S0)
     latent_prior = P0
     emission_prior = [r0, R0]
@@ -76,7 +76,7 @@ def generate_mniw_data(root='./data_packs', name='hdp_slds_mniw'):
     generate_hdp_slds_groundtrouth(folder, num_traces, num_steps, model)
 
 
-def generate_ard_data(root='./data_packs', name='hdp_slds_ard'):
+def generate_ard_data(root="./data_packs", name="hdp_slds_ard"):
 
     print_line()
     print_line("Generate HDP-SLDS-HMM using ARD prior")
@@ -89,7 +89,7 @@ def generate_ard_data(root='./data_packs', name='hdp_slds_ard'):
     max_z = 5
 
     # projection
-    C = np.hstack((np.eye(od), np.zeros([od, ld-od])))
+    C = np.hstack((np.eye(od), np.zeros([od, ld - od])))
 
     # setup hdp prior
     alpha_kappa0 = [15.0, 3.0]
@@ -107,7 +107,7 @@ def generate_ard_data(root='./data_packs', name='hdp_slds_ard'):
     R0 = 1e-6 * np.eye(od)
 
     # create priors
-    hdp_prior = StickyHDPPrior(max_z, alpha_kappa0, rho0, gamma0, 'uniform')
+    hdp_prior = StickyHDPPrior(max_z, alpha_kappa0, rho0, gamma0, "uniform")
     ard_prior = ARDPrior(alpha0, n0, S0)
     latent_prior = P0
     emission_prior = [r0, R0]
@@ -118,6 +118,6 @@ def generate_ard_data(root='./data_packs', name='hdp_slds_ard'):
     generate_hdp_slds_groundtrouth(folder, num_traces, num_steps, model)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     generate_ard_data()
     generate_mniw_data()

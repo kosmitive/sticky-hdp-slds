@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -22,11 +22,10 @@
 
 
 import numpy as np
-from scipy.stats import invwishart, matrix_normal
+from scipy.stats import invwishart
 
 
 class StickyHDPSLDSHMMModelARDMixin:
-
     def slds_post_ard_dynamics_param_sampling(self):
 
         # split into reg problems
@@ -41,7 +40,6 @@ class StickyHDPSLDSHMMModelARDMixin:
 
         # sample the dynamic matrices
         for k in range(self.hdp_prior.max_z):
-
             # compute sufficient statistics
             suff_stats = 0
 
@@ -55,8 +53,9 @@ class StickyHDPSLDSHMMModelARDMixin:
                 suff_stats += np.outer(v, v)
 
             # sample covariance
-            self.slds_params[1][k] = invwishart.rvs(n[k] + self.dyn_prior.n0,
-                       suff_stats + self.dyn_prior.S0)
+            self.slds_params[1][k] = invwishart.rvs(
+                n[k] + self.dyn_prior.n0, suff_stats + self.dyn_prior.S0
+            )
 
     def __slds_post_ard_dynamics_sample_dyn_mat(self, prob_pt, prob_ct):
 
@@ -65,19 +64,17 @@ class StickyHDPSLDSHMMModelARDMixin:
 
         # sample the dynamic matrices
         for k in range(self.hdp_prior.max_z):
-
             # obtain number of elements
             num_elements = prob_ct[k].shape[1]
 
             # Eq. (30): information form uses Sigma^{-1}. Column j has prior
             # precision alpha_j, repeated under the column-major vectorization.
             noise_precision = np.linalg.inv(self.slds_params[1][k])
-            info = np.zeros(self.ld ** 2)
+            info = np.zeros(self.ld**2)
             precision = np.diag(np.repeat(alphas[k], self.ld))
 
             # iterate over all elements
             for i in range(num_elements):
-
                 # construct matrix
                 mat = np.tile(np.eye(self.ld), [1, self.ld])
                 mat *= np.expand_dims(np.repeat(prob_pt[k][:, i], self.ld), 0)
@@ -93,18 +90,17 @@ class StickyHDPSLDSHMMModelARDMixin:
             new_A = np.random.multivariate_normal(mean, cov)
 
             # Column-major vectorization matches the design matrix above.
-            self.slds_params[0][k] = new_A.reshape((self.ld, self.ld), order='F')
+            self.slds_params[0][k] = new_A.reshape((self.ld, self.ld), order="F")
 
     def __slds_post_ard_dynamics_sample_alpha(self):
 
         # sample the dynamic matrices
         for k in range(self.hdp_prior.max_z):
-
             # rename
             current_dyn = self.slds_params[0][k]
             alpha_a = self.dyn_prior.alpha0[0] + self.ld / 2
             # Eq. (31): the rate adds half the sum of squares in the column.
-            alpha_b = self.dyn_prior.alpha0[1] + 0.5 * np.sum(current_dyn ** 2, 0)
+            alpha_b = self.dyn_prior.alpha0[1] + 0.5 * np.sum(current_dyn**2, 0)
             self.slds_params[2][k, :] = np.random.gamma(alpha_a, 1 / alpha_b)
 
     def __split_into_regression_problems(self):
@@ -127,12 +123,10 @@ class StickyHDPSLDSHMMModelARDMixin:
         # iterate over all
         for d in range(num_traces):
             for t in range(1, num_steps):
-
                 k = mode_seq[d, t]
                 i = indices[k]
                 prob_oh[k][:, i] = pseudo_observations[d, t]
-                prob_h[k][:, i] = pseudo_observations[d, t-1]
+                prob_h[k][:, i] = pseudo_observations[d, t - 1]
                 indices[k] += 1
 
         return prob_h, prob_oh, bins
-

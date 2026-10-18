@@ -265,7 +265,7 @@ def test_ard_alpha_posterior_uses_half_the_sum_of_squares(monkeypatch) -> None:
     matrix = np.array([[3.0, 0.0], [0.0, 4.0]])
     model.slds_params = [np.array([matrix]), np.array([np.eye(2)]), np.ones((1, 2))]
     model._StickyHDPSLDSHMMModelARDMixin__slds_post_ard_dynamics_sample_alpha()
-    column_squares = np.sum(matrix ** 2, axis=0)
+    column_squares = np.sum(matrix**2, axis=0)
     assert captured["shape"] == 4.0 + 1.0
     assert np.allclose(captured["scale"], 1.0 / (2.0 + 0.5 * column_squares))
 
@@ -311,7 +311,9 @@ def test_log_likelihood_adds_every_mode_and_the_initial_state() -> None:
         latent += stats.multivariate_normal.logpdf(model.x[0, t], mean, model.slds_params[1][mode])
     emission = 0.0
     for t in range(3):
-        emission += stats.multivariate_normal.logpdf(model.y[0, t], model.C @ model.x[0, t], model.R)
+        emission += stats.multivariate_normal.logpdf(
+            model.y[0, t], model.C @ model.x[0, t], model.R
+        )
     modes = np.log(0.7)
     modes += np.log(model.hdp_params[4][0, 1])
     modes += np.log(model.hdp_params[4][1, 0])
@@ -352,14 +354,16 @@ def test_block_mode_sampler_matches_the_two_step_posterior() -> None:
     model.y = model.x.copy()
     model.z = np.zeros((1, 2), dtype=np.int64)
 
-    lik = np.array([
-        stats.multivariate_normal.pdf(
-            model.x[0, 1],
-            model.slds_params[0][k] @ model.x[0, 0],
-            model.slds_params[1][k],
-        )
-        for k in range(2)
-    ])
+    lik = np.array(
+        [
+            stats.multivariate_normal.pdf(
+                model.x[0, 1],
+                model.slds_params[0][k] @ model.x[0, 0],
+                model.slds_params[1][k],
+            )
+            for k in range(2)
+        ]
+    )
     joint = np.zeros((2, 2))
     for i in range(2):
         for j in range(2):
@@ -467,7 +471,10 @@ def test_rounds_hdp_is_stored_on_its_own_field() -> None:
 
 def test_simulated_emission_noise_matches_the_observations() -> None:
     model = _model()
-    model.slds_params = [np.stack([0.4 * np.eye(2), 0.2 * np.eye(2)]), np.repeat(0.1 * np.eye(2)[None], 2, axis=0)]
+    model.slds_params = [
+        np.stack([0.4 * np.eye(2), 0.2 * np.eye(2)]),
+        np.repeat(0.1 * np.eye(2)[None], 2, axis=0),
+    ]
     model.hdp_params = [1.0, 0.8, 1.0, np.full(2, 0.5), np.array([[0.9, 0.1], [0.2, 0.8]])]
     model.R = 0.05 * np.eye(2)
     model.simulate(3, 5, init=False)
@@ -475,5 +482,3 @@ def test_simulated_emission_noise_matches_the_observations() -> None:
     assert model.w.shape == model.y.shape
     assert model.x.shape == (3, 5, 2)
     assert model.z.shape == (3, 5)
-
-

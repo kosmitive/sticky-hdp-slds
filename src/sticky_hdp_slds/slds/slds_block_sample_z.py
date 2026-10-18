@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -24,13 +24,10 @@
 import numpy as np
 import scipy.stats as sp
 
-from sticky_hdp_slds.misc.disc_sample import sample_cat
-
 
 class StickyHDPSLDSHMMModelBlockZMixin:
-
     def slds_post_block_sample_z(self):
-        """ This method can be used to block sample the mode assignment, once
+        """This method can be used to block sample the mode assignment, once
 
         :return: A vector [DxT] representing the sampled modes.
         """
@@ -60,7 +57,7 @@ class StickyHDPSLDSHMMModelBlockZMixin:
         # Scores stay in log space. A product of densities underflows to 0,
         # and the uniform fallback then is not the filtering posterior.
         beta = self.hdp_params[3]
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             log_pi = np.log(np.asarray(pi, dtype=np.float64))
             log_beta = np.log(np.asarray(beta, dtype=np.float64))
         for t in range(num_steps):
@@ -93,7 +90,7 @@ class StickyHDPSLDSHMMModelBlockZMixin:
         # log m_t(k) = logsumexp_j(log pi_kj + log lik(x_{t+1}|x_t, j) + log m_{t+1}(j)).
         # The likelihood at time t is applied when z_t is sampled.
         messages = np.zeros([num_traces, num_steps, max_state])
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             log_pi = np.log(np.asarray(self.hdp_params[4], dtype=np.float64))
         for t in reversed(range(num_steps - 1)):
             terms = log_pi[None, :, :] + gauss_dens[:, t + 1, None, :] + messages[:, t + 1, None, :]
@@ -125,7 +122,9 @@ class StickyHDPSLDSHMMModelBlockZMixin:
                 for k in range(max_state):
                     x = self.x[d, t]
                     mu = self.slds_params[0][k] @ self.x[d, t - 1]
-                    gauss_dens[d, t, k] = sp.multivariate_normal.logpdf(x, mu, self.slds_params[1][k])
+                    gauss_dens[d, t, k] = sp.multivariate_normal.logpdf(
+                        x, mu, self.slds_params[1][k]
+                    )
 
         if not use_log:
             gauss_dens = np.exp(gauss_dens)

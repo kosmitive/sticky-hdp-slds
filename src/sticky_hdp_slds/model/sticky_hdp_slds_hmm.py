@@ -1,7 +1,7 @@
 # MIT License
-# 
+#
 # Copyright (c) 2018 Markus Semmler
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
@@ -22,16 +22,16 @@
 
 
 from os.path import join
+
 import numpy as np
 from scipy.stats import invwishart, multivariate_normal
 
 from sticky_hdp_slds.misc.disc_sample import sample_cat
-from sticky_hdp_slds.misc.hdd_save_load import save_json, load_json
+from sticky_hdp_slds.misc.hdd_save_load import load_json, save_json
 from sticky_hdp_slds.model.ard_prior import ARDPrior
 from sticky_hdp_slds.model.mniw_prior import MNIWPrior
 from sticky_hdp_slds.model.sticky_hdp_prior import StickyHDPPrior
 from sticky_hdp_slds.slds.slds_ard_prior_sample import StickyHDPSLDSHMMModelARDMixin
-
 from sticky_hdp_slds.slds.slds_block_sample_x import StickyHDPSLDSHMMModelBlockXMixin
 from sticky_hdp_slds.slds.slds_block_sample_z import StickyHDPSLDSHMMModelBlockZMixin
 from sticky_hdp_slds.slds.slds_init import StickyHDPSLDSHMMModelInitMixin
@@ -42,29 +42,43 @@ from sticky_hdp_slds.slds.slds_sample_sticky_hdp_params import StickyHDPSLDSHMMM
 from sticky_hdp_slds.slds.slds_seq_sample_z import StickyHDPSLDSHMMModelSeqZMixin
 
 
-class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMModelBlockZMixin,
-                            StickyHDPSLDSHMMModelKalmanYMixin, StickyHDPSLDSHMMModelMNIWMixin,
-                            StickyHDPSLDSHMMModelEmissionMixin, StickyHDPSLDSHMMModelHDPMixin,
-                            StickyHDPSLDSHMMModelSeqZMixin, StickyHDPSLDSHMMModelInitMixin,
-                            StickyHDPSLDSHMMModelARDMixin):
+class StickyHDPSLDSHMMModel(
+    StickyHDPSLDSHMMModelBlockXMixin,
+    StickyHDPSLDSHMMModelBlockZMixin,
+    StickyHDPSLDSHMMModelKalmanYMixin,
+    StickyHDPSLDSHMMModelMNIWMixin,
+    StickyHDPSLDSHMMModelEmissionMixin,
+    StickyHDPSLDSHMMModelHDPMixin,
+    StickyHDPSLDSHMMModelSeqZMixin,
+    StickyHDPSLDSHMMModelInitMixin,
+    StickyHDPSLDSHMMModelARDMixin,
+):
+    fn_main = "hdp_slds_hmm_model.json"
+    fn_beta = "beta.npy"
+    fn_pi = "pi.npy"
+    fn_R0 = "P0.npy"
+    fn_ard_alpha = "ard_alpha.npy"
+    fn_P0 = "R0.npy"
+    fn_A = "A.npy"
+    fn_Sigma = "Sigma.npy"
+    fn_C = "C.npy"
+    fn_R = "R.npy"
+    fn_z = "z.npy"
+    fn_x = "x.npy"
+    fn_e = "e.npy"
+    fn_y = "y.npy"
+    fn_w = "w.npy"
 
-    fn_main = 'hdp_slds_hmm_model.json'
-    fn_beta = 'beta.npy'
-    fn_pi = 'pi.npy'
-    fn_R0 = 'P0.npy'
-    fn_ard_alpha = 'ard_alpha.npy'
-    fn_P0 = 'R0.npy'
-    fn_A = 'A.npy'
-    fn_Sigma = 'Sigma.npy'
-    fn_C = 'C.npy'
-    fn_R = 'R.npy'
-    fn_z = 'z.npy'
-    fn_x = 'x.npy'
-    fn_e = 'e.npy'
-    fn_y = 'y.npy'
-    fn_w = 'w.npy'
-
-    def __init__(self, latent_dim, observ_dim, hdp_prior, dyn_prior, latent_prior, emission_prior, emission_proj):
+    def __init__(
+        self,
+        latent_dim,
+        observ_dim,
+        hdp_prior,
+        dyn_prior,
+        latent_prior,
+        emission_prior,
+        emission_proj,
+    ):
 
         # sample some initial parameters
         self.dyn_prior = dyn_prior
@@ -92,9 +106,9 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
 
         # dispatch
         if isinstance(dyn_prior, ARDPrior):
-            self.dyn_prior_type = 'ard'
+            self.dyn_prior_type = "ard"
         elif isinstance(dyn_prior, MNIWPrior):
-            self.dyn_prior_type = 'mniw'
+            self.dyn_prior_type = "mniw"
         else:
             self.dyn_prior_type = None
 
@@ -113,7 +127,6 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         return emission_ll + state_transition_ll + latent_transition_ll
 
     def __calc_latent_transition_ll(self):
-
         """Calculates log likelihood of the latent transitions."""
 
         # x_t | x_{t-1}, z_t for every trace and t >= 1. The previous index
@@ -125,7 +138,8 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
                 mode = int(self.z[trace, step])
                 mean_x = self.slds_params[0][mode] @ self.x[trace, step - 1]
                 latent_transition_ll += multivariate_normal.logpdf(
-                    self.x[trace, step], mean_x, self.slds_params[1][mode])
+                    self.x[trace, step], mean_x, self.slds_params[1][mode]
+                )
 
         return latent_transition_ll
 
@@ -136,7 +150,7 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
 
         # create cost matrix for all assignment combinations
         transitions = (num_modes * self.z[:, :-1] + self.z[:, 1:]).reshape(-1)
-        transition_factors = np.bincount(transitions, minlength=num_modes ** 2)
+        transition_factors = np.bincount(transitions, minlength=num_modes**2)
         transition_count_matrix = transition_factors.reshape([num_modes] * 2)
         smoothed_measure = self.hdp_params[4] + 1e-6
         smoothed_measure = smoothed_measure / np.expand_dims(np.sum(smoothed_measure, 1), 1)
@@ -188,20 +202,20 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
 
         # repeat till all traces were generated
         for t in range(num_traces):
-
             # Simply choose one z from beta and draw a random multivariate x
             z[t, 0] = sample_cat(beta)
             x[t, 0] = np.random.multivariate_normal(np.zeros(self.ld), self.latent_prior)
 
             # execute all steps
             for s in range(1, num_steps + 1):
-
                 # sample new mode
                 pre_z = z[t, s - 1]
                 cur_z = sample_cat(pi[pre_z])
 
                 # get the current mode as an integer
-                e[t, s - 1] = np.random.multivariate_normal(np.zeros(self.ld), slds_params[1][cur_z])
+                e[t, s - 1] = np.random.multivariate_normal(
+                    np.zeros(self.ld), slds_params[1][cur_z]
+                )
                 x[t, s] = slds_params[0][cur_z] @ x[t, s - 1] + e[t, s - 1]
                 z[t, s] = cur_z
 
@@ -238,29 +252,29 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         hdp_prior = StickyHDPPrior.load(folder)
 
         # depending on the type of prior
-        dyn_prior = ARDPrior.load(folder) if data['prior'] == 'ard' else MNIWPrior.load(folder)
+        dyn_prior = ARDPrior.load(folder) if data["prior"] == "ard" else MNIWPrior.load(folder)
 
         # save prior matrices
         C = np.load(join(folder, StickyHDPSLDSHMMModel.fn_C))
         R0 = np.load(join(folder, StickyHDPSLDSHMMModel.fn_R0))
         latent_prior = np.load(join(folder, StickyHDPSLDSHMMModel.fn_P0))
-        emission_prior = [data['r0'], R0]
+        emission_prior = [data["r0"], R0]
 
         # create object
-        ld = data['ld']
-        od = data['od']
+        ld = data["ld"]
+        od = data["od"]
         m = StickyHDPSLDSHMMModel(ld, od, hdp_prior, dyn_prior, latent_prior, emission_prior, C)
 
         # load hdp
         beta = np.load(join(folder, StickyHDPSLDSHMMModel.fn_beta))
         pi = np.load(join(folder, StickyHDPSLDSHMMModel.fn_pi))
-        m.hdp_params = list([data['alpha_kappa'], data['rho'], data['gamma'], beta, pi])
+        m.hdp_params = list([data["alpha_kappa"], data["rho"], data["gamma"], beta, pi])
 
         # load dynamics
         A = np.load(join(folder, StickyHDPSLDSHMMModel.fn_A))
         Sigma = np.load(join(folder, StickyHDPSLDSHMMModel.fn_Sigma))
         m.slds_params = [A, Sigma]
-        if data['prior'] == 'ard':
+        if data["prior"] == "ard":
             m.slds_params.append(np.load(join(folder, StickyHDPSLDSHMMModel.fn_ard_alpha)))
 
         # save rest
@@ -277,15 +291,15 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         """Store the prior in the specified folder."""
 
         # store the dict
-        prior_type = 'ard' if isinstance(self.dyn_prior, ARDPrior) else 'mniw'
+        prior_type = "ard" if isinstance(self.dyn_prior, ARDPrior) else "mniw"
         data = {
-            'ld': self.ld,
-            'od': self.od,
-            'prior': prior_type,
-            'r0': self.emission_prior[0],
-            'alpha_kappa': self.hdp_params[0],
-            'rho': self.hdp_params[1],
-            'gamma': self.hdp_params[2]
+            "ld": self.ld,
+            "od": self.od,
+            "prior": prior_type,
+            "r0": self.emission_prior[0],
+            "alpha_kappa": self.hdp_params[0],
+            "rho": self.hdp_params[1],
+            "gamma": self.hdp_params[2],
         }
         save_json(folder, StickyHDPSLDSHMMModel.fn_main, data)
 
@@ -301,7 +315,7 @@ class StickyHDPSLDSHMMModel(StickyHDPSLDSHMMModelBlockXMixin, StickyHDPSLDSHMMMo
         np.save(join(folder, StickyHDPSLDSHMMModel.fn_A), self.slds_params[0])
         np.save(join(folder, StickyHDPSLDSHMMModel.fn_Sigma), self.slds_params[1])
 
-        if prior_type == 'ard':
+        if prior_type == "ard":
             np.save(join(folder, StickyHDPSLDSHMMModel.fn_ard_alpha), self.slds_params[2])
 
         np.save(join(folder, StickyHDPSLDSHMMModel.fn_C), self.C)
