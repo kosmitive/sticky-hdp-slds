@@ -35,8 +35,8 @@ class StickyHDPSLDSHMMModelBlockZMixin:
         :return: A vector [DxT] representing the sampled modes.
         """
 
-        # calc messages
-        gauss_dens = self.__calc_likelihood_transition()
+        # calc messages in log space
+        gauss_dens = self.__calc_likelihood_transition(use_log=True)
         messages = self.__calc_messages(gauss_dens)
 
         # now sample the nodes
@@ -57,16 +57,27 @@ class StickyHDPSLDSHMMModelBlockZMixin:
         num_traces, num_steps, max_state = gauss_dens.shape
         pi = self.hdp_params[4]
 
-        # iterate over and fill
+        # Scores stay in log space. A product of densities underflows to 0,
+        # and the uniform fallback then is not the filtering posterior.
+        beta = self.hdp_params[3]
+        with np.errstate(divide='ignore'):
+            log_pi = np.log(np.asarray(pi, dtype=np.float64))
+            log_beta = np.log(np.asarray(beta, dtype=np.float64))
         for t in range(num_steps):
-
-            # simply
-            f = pi[self.z[:, t - 1]] if t > 0 else np.ones([num_traces, max_state])
-            f *= gauss_dens[:, t] * messages[:, t]
+            if t > 0:
+                f = log_pi[self.z[:, t - 1]] + gauss_dens[:, t] + messages[:, t]
+            else:
+                f = log_beta + gauss_dens[:, t] + messages[:, t]
 
             for d in range(num_traces):
-                z_t = np.random.choice(np.arange(max_state), p=f[d] / np.sum(f[d]))
-                self.z[d, t] = z_t
+                row = f[d]
+                finite = np.isfinite(row)
+                if not np.any(finite):
+                    probs = np.full(max_state, 1.0 / max_state)
+                else:
+                    shifted = np.exp(np.where(finite, row, -np.inf) - np.max(row[finite]))
+                    probs = shifted / np.sum(shifted)
+                self.z[d, t] = np.random.choice(np.arange(max_state), p=probs)
 
     def __calc_messages(self, gauss_dens):
         """This method calculates the messages passed from the latent dynamic
@@ -79,15 +90,15 @@ class StickyHDPSLDSHMMModelBlockZMixin:
 
         num_traces, num_steps, max_state = gauss_dens.shape
 
-        # execute belief prog
-        messages = np.ones([num_traces, num_steps + 1, max_state])
-
-        # iterate over
-        for t in reversed(range(num_steps)):
-            for k in range(max_state):
-                mult = gauss_dens[:, t] * messages[:, t + 1]
-                res = np.einsum('kj,nj->nk', self.hdp_params[4], mult)
-                messages[:, t, :] = res
+        # log m_t(k) = logsumexp_j(log pi_kj + log lik(x_{t+1}|x_t, j) + log m_{t+1}(j)).
+        # The likelihood at time t is applied when z_t is sampled.
+        messages = np.zeros([num_traces, num_steps, max_state])
+        with np.errstate(divide='ignore'):
+            log_pi = np.log(np.asarray(self.hdp_params[4], dtype=np.float64))
+        for t in reversed(range(num_steps - 1)):
+            terms = log_pi[None, :, :] + gauss_dens[:, t + 1, None, :] + messages[:, t + 1, None, :]
+            messages[:, t, :] = np.logaddexp.reduce(terms, axis=2)
+            messages[:, t, :] -= np.logaddexp.reduce(messages[:, t, :], axis=1, keepdims=True)
 
         return messages
 
@@ -105,8 +116,8 @@ class StickyHDPSLDSHMMModelBlockZMixin:
         num_traces, num_steps, _ = self.x.shape
         max_state, _, _ = self.slds_params[0].shape
 
-        # reserve space and iteratively fill
-        gauss_dens = np.ones([num_traces, num_steps, max_state])
+        # Time 0 has no stored parent, so its log density is 0.
+        gauss_dens = np.zeros([num_traces, num_steps, max_state])
 
         # calculate the gaussian densities
         for d in range(num_traces):
@@ -114,7 +125,8 @@ class StickyHDPSLDSHMMModelBlockZMixin:
                 for k in range(max_state):
                     x = self.x[d, t]
                     mu = self.slds_params[0][k] @ self.x[d, t - 1]
-                    fn = sp.multivariate_normal.logpdf if use_log else sp.multivariate_normal.pdf
-                    gauss_dens[d, t, k] = fn(x, mu, self.slds_params[1][k])
+                    gauss_dens[d, t, k] = sp.multivariate_normal.logpdf(x, mu, self.slds_params[1][k])
 
+        if not use_log:
+            gauss_dens = np.exp(gauss_dens)
         return gauss_dens

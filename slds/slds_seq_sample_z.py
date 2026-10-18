@@ -47,15 +47,14 @@ class StickyHDPSLDSHMMModelSeqZMixin:
             for t in reversed(range(num_steps)):
 
                 # shorthand
-                z_t = self.z[d, t]
                 inv_mat_gain = np.linalg.inv(forward_gain_mat[d, t])
-                dyn_mat = self.slds_params[0][z_t]
 
                 # calc the f values
                 f = np.zeros(max_state, np.float64)
                 for k in range(max_state):
 
-                    # calc terms like in (4.27) 591409532-MIT.pdf
+                    # Eq. (39)-(40): A and Sigma both belong to candidate k.
+                    dyn_mat = self.slds_params[0][k]
                     dyn_var_mat = self.slds_params[1][k]
                     b_val = dyn_mat @ inv_mat_gain
                     c_val = b_val @ dyn_mat.transpose()
@@ -68,20 +67,31 @@ class StickyHDPSLDSHMMModelSeqZMixin:
                     inv_summed_mat = np.linalg.inv(summed_mat)
                     summed_vec = p_vec_k + backward_gain_vec[d, t+1]
 
-                    # get inner distance
+                    # Eq. (39): (1/2) log|P| - (1/2) log|P + Lambda^b|, plus the quadratics.
                     term = -0.5 * p_vec_k @ inv_p_mat_k @ p_vec_k + 0.5 * summed_vec @ inv_summed_mat @ summed_vec
-                    f[k] = np.log(np.sqrt(np.linalg.det(p_mat_k) / np.log(np.linalg.det(summed_mat)) + 0.0001))
-                    f[k] += term
+                    sign_p, logdet_p = np.linalg.slogdet(p_mat_k)
+                    sign_s, logdet_s = np.linalg.slogdet(summed_mat)
+                    if sign_p <= 0 or sign_s <= 0:
+                        f[k] = -np.inf
+                    else:
+                        f[k] = 0.5 * (logdet_p - logdet_s) + term
 
-                    # add the pi values if not at the corresponding end
-                    if t > 1:
+                    # z_0 is scored under beta. The transition into time 1 is included.
+                    if t > 0:
                         z_pt = self.z[d, t-1]
                         f[k] += np.log(self.hdp_params[4][z_pt, k] + 1e-6)
+                    else:
+                        f[k] += np.log(self.hdp_params[3][k] + 1e-6)
 
                     if t < num_steps - 1:
                         z_nt = self.z[d, t+1]
                         f[k] += np.log(self.hdp_params[4][k, z_nt] + 1e-6)
 
-                e = np.exp(f - np.max(f))
-                self.z[d, t] = np.random.choice(np.arange(max_state), p=e/np.sum(e))
+                finite = np.isfinite(f)
+                if not np.any(finite):
+                    probs = np.full(max_state, 1.0 / max_state)
+                else:
+                    shifted = np.exp(np.where(finite, f, -np.inf) - np.max(f[finite]))
+                    probs = shifted / np.sum(shifted)
+                self.z[d, t] = np.random.choice(np.arange(max_state), p=probs)
 
