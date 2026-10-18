@@ -320,6 +320,10 @@ class StickyHDPSLDSHMMConfiguration:
                 forward_gains = self.it.slds_forward_kalman_filter_gains()
                 self.it.slds_post_seq_sample_z(forward_gains[0], forward_gains[1], backward_gains[0], backward_gains[1])
 
+                # Those gains were built from the modes before this draw.
+                if self.sample_x:
+                    backward_gains = self.it.slds_backward_kalman_filter_gains()
+
             # first of all sample
             if self.sample_x: self.it.slds_post_block_sample_x(backward_gains[0], backward_gains[1])
 
