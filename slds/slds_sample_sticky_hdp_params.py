@@ -54,7 +54,8 @@ class StickyHDPSLDSHMMModelHDPMixin:
         for j in range(trunc_level):
             for k in range(trunc_level):
                 term = alpha * beta[k] + np.where(j == k, kappa, 0)
-                offsets = np.arange(transitions[j, k]) + 1
+                # Customer n starts at 0, so the first customer always opens a table.
+                offsets = np.arange(transitions[j, k])
                 prob = term / (offsets + term)
                 x = [np.random.binomial(1, p) for p in prob]
                 m[j, k] += np.count_nonzero(x)
@@ -63,19 +64,20 @@ class StickyHDPSLDSHMMModelHDPMixin:
         rho = kappa / (alpha + kappa)
         p = rho / (rho + beta * (1 - rho))
 
-        # now simply create
-        w = np.asarray([np.random.binomial(m[j, j], p[j]) for j in range(trunc_level)])
-        m_hat = m - np.diag(w)
+        # Overrides are not the emission noise stored on self.w.
+        # m_hat removes them from the diagonal (Fox et al., Eq. B.20).
+        override_counts = np.asarray([np.random.binomial(m[j, j], p[j]) for j in range(trunc_level)])
+        m_hat = m - np.diag(override_counts)
 
         # save auxiliary vars
         self.m = m
         self.m_hat = m_hat
-        self.w = w
+        self.override_counts = override_counts
 
     def sample_post_hdp_rho(self):
 
         m = self.m
-        w = self.w
+        w = self.override_counts
         prior = self.hdp_prior.rho0
 
         sw = np.sum(w)
@@ -119,19 +121,17 @@ class StickyHDPSLDSHMMModelHDPMixin:
         prior = self.hdp_prior.alpha_kappa0
         alpha_kappa = self.hdp_params[0]
 
-        # set trunk level
-        trunc_level = transitions.shape[0]
-
         # sample again auxiliary vars
         n_rows = np.sum(transitions, axis=1)
 
-        # sample auxiliary r and s
-        r = [beta.rvs(alpha_kappa + 1, n_rows[j] + 1e-6) for j in range(trunc_level)]
-        s = [bernoulli.rvs(n_rows[j] / (n_rows[j] + alpha_kappa)) for j in range(trunc_level)]
+        # Empty restaurants contribute a factor of 1 and have no auxiliaries.
+        active = np.flatnonzero(n_rows > 0)
+        r = [beta.rvs(alpha_kappa + 1, n_rows[j]) for j in active]
+        s = [bernoulli.rvs(n_rows[j] / (n_rows[j] + alpha_kappa)) for j in active]
 
         # sample the sum of alpha and kappa
-        summed_s = np.sum(s)
-        summed_r = np.sum(np.log(r))
+        summed_s = np.sum(s) if len(s) else 0.0
+        summed_r = np.sum(np.log(r)) if len(r) else 0.0
 
         # get a and b
         a = prior[0] + np.sum(self.m) - summed_s

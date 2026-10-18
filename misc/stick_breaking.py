@@ -66,9 +66,14 @@ def stick_breaking_construction_dp(alpha, base_measure, num_modes, k_max=10000):
     :return: The drawn dirichlet process distribution.
     """
 
-    # replace base measure if it is a string
-    if base_measure == 'uniform':
+    # An array compared with == raises. Only the name 'uniform' is special.
+    if isinstance(base_measure, str) and base_measure == 'uniform':
         base_measure = np.ones(num_modes) / num_modes
+    elif isinstance(base_measure, str):
+        raise ValueError("Unknown base measure %r." % (base_measure,))
+
+    base_measure = np.asarray(base_measure, dtype=np.float64)
+    base_measure = base_measure / np.sum(base_measure)
 
     # generate some samples
     base_samples = np.random.choice(num_modes, p=base_measure, size=k_max)

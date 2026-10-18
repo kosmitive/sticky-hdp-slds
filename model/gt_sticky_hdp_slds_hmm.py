@@ -108,7 +108,7 @@ class StickyHDPSLDSHMMConfiguration:
 
         # rounds
         if 'rounds_ard' in test_conf: m.rounds_ard = test_conf['rounds_ard']
-        if 'rounds_hdp' in test_conf: m.rounds_ard = test_conf['rounds_hdp']
+        if 'rounds_hdp' in test_conf: m.rounds_hdp = test_conf['rounds_hdp']
         if 'rounds_hmm' in test_conf: m.rounds_hmm = test_conf['rounds_hmm']
 
         # store hdp params
