@@ -1,5 +1,44 @@
-"""Sticky HDP-SLDS Gibbs sampler."""
+"""Sticky HDP-SLDS and sticky regime-HAR Gibbs samplers.
 
-from sticky_hdp_slds.model.sticky_hdp_slds_hmm import StickyHDPSLDSHMMModel
+Importing this package enables float64. Gibbs blocks are pure functions from
+``(key, state, data)`` to a new state.
+"""
 
-__all__ = ["StickyHDPSLDSHMMModel"]
+from __future__ import annotations
+
+import sticky_hdp_slds._dtype  # noqa: F401
+from sticky_hdp_slds.inference import (
+    RegimeData,
+    RegimeDraw,
+    RegimePrior,
+    RegimeState,
+    SLDSData,
+    SLDSPrior,
+    SLDSState,
+    backward_sample,
+    filter_regime_draws,
+    fit_regime_har,
+    forward_filter,
+    sample_regime_har,
+    sample_regime_windows,
+    sample_slds,
+    slds_sweep,
+)
+
+__all__ = [
+    "RegimeData",
+    "RegimeDraw",
+    "RegimePrior",
+    "RegimeState",
+    "SLDSData",
+    "SLDSPrior",
+    "SLDSState",
+    "backward_sample",
+    "filter_regime_draws",
+    "fit_regime_har",
+    "forward_filter",
+    "sample_regime_har",
+    "sample_regime_windows",
+    "sample_slds",
+    "slds_sweep",
+]
