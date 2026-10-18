@@ -23,6 +23,7 @@ dev = [
     "pytest>=7",
     "ruff>=0.6",
     "pre-commit>=3",
+    "mypy>=1.11",
 ]
 
 [tool.uv]
@@ -31,6 +32,13 @@ default-groups = ["dev"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["sticky_hdp_slds"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+show_error_codes = true
 
 [tool.ruff]
 target-version = "py311"
